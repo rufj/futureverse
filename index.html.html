@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FutureVerse | 未来梦想家乐园</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: #050510;
+            color: #fff;
+            overflow-x: hidden;
+            cursor: none;
+        }
+        
+        .cursor {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #00f0ff;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s;
+            mix-blend-mode: difference;
+        }
+        
+        .cursor-follower {
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, rgba(0,240,255,0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            transition: transform 0.3s ease-out;
+        }
+        
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        
+        .glass-hover:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(0, 240, 255, 0.5);
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.3);
+        }
+        
+        /* Neon Glow */
+        .neon-text {
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5),
+                         0 0 20px rgba(0, 240, 255, 0.3),
+                         0 0 30px rgba(0, 240, 255, 0.2);
+        }
+        
+        .neon-border {
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.3),
+                        inset 0 0 20px rgba(0, 240, 255, 0.1);
+        }
+        
+        /* Floating Animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes float-delayed {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        .float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .float-delayed {
+            animation: float-delayed 8s ease-in-out infinite;
+            animation-delay: 1s;
+        }
+        
+        /* Grid Background */
+        .cyber-grid {
+            background-image: 
+                linear-gradient(rgba(0, 240, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            perspective: 1000px;
+            transform-style: preserve-3d;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #050510;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #00f0ff, #7000ff);
+            border-radius: 4px;
+        }
+        
+        /* Module Cards */
+        .module-card {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        
+        .module-card:hover {
+            transform: translateY(-10px) rotateX(5deg) rotateY(5deg);
+        }
+        
+        /* Particle Canvas */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        /* Three.js Canvas */
+        #city-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        
+        /* Typing Effect */
+        .typing::after {
+            content: '|';
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        /* Hologram Effect */
+        .hologram {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hologram::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent 30%,
+                rgba(0, 240, 255, 0.1) 50%,
+                transparent 70%
+            );
+            animation: hologram-scan 3s linear infinite;
+        }
+        
+        @keyframes hologram-scan {
+            0% { transform: translateY(-100%) rotate(45deg); }
+            100% { transform: translateY(100%) rotate(45deg); }
+        }
+        
+        /* Button Effects */
+        .cyber-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        
+        .cyber-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+        
+        .cyber-btn:hover::before {
+            left: 100%;
+        }
+        
+        /* Modal */
+        .modal {
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* Input Glow */
+        .cyber-input:focus {
+            outline: none;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+            border-color: #00f0ff;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Custom Cursor -->
+    <div class="cursor" id="cursor"></div>
+    <div class="cursor-follower" id="cursor-follower"></div>
+
+    <!-- Particle Canvas -->
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass px-6 py-4 transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center">
+                    <span class="font-orbitron font-bold text-xl">FV</span>
+                </div>
+                <span class="font-orbitron text-2xl font-bold neon-text tracking-wider">FutureVerse</span>
+            </div>
+            
+            <div class="hidden md:flex space-x-8">
+                <a href="#explore" class="hover:text-cyan-400 transition-colors tracking-wide">探索未来</a>
+                <a href="#modules" class="hover:text-cyan-400 transition-colors tracking-wide">四大模块</a>
+                <a href="#create" class="hover:text-cyan-400 transition-colors tracking-wide">梦想工坊</a>
+                <a href="#community" class="hover:text-cyan-400 transition-colors tracking-wide">社区</a>
+            </div>
+            
+            <button class="cyber-btn px-6 py-2 rounded-full border border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-black font-bold transition-all">
+                连接钱包
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section with Three.js City -->
+    <section class="relative h-screen w-full overflow-hidden">
+        <canvas id="city-canvas"></canvas>
+        
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#050510] z-10"></div>
+        
+        <div class="relative z-20 h-full flex flex-col justify-center items-center text-center px-4">
+            <div class="mb-6 inline-block px-4 py-1 rounded-full glass border border-cyan-400/30 text-cyan-400 text-sm tracking-widest uppercase float">
+                Welcome to 2088
+            </div>
+            
+            <h1 class="font-orbitron text-5xl md:text-7xl lg:text-8xl font-black mb-6 leading-tight">
+                <span class="block neon-text typing" id="hero-title">构建你的未来</span>
+                <span class="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500">
+                    梦想家乐园
+                </span>
+            </h1>
+            
+            <p class="max-w-2xl text-lg md:text-xl text-gray-300 mb-10 leading-relaxed float-delayed">
+                无人驾驶、低空飞行、AI医疗... 这不是科幻，这是我们正在共建的明天。<br>
+                加入 <span class="text-cyan-400 font-bold">10,000+</span> 梦想家，一起绘制未来蓝图。
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button onclick="scrollToSection('modules')" class="cyber-btn px-8 py-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-lg hover:scale-105 transition-transform shadow-lg shadow-cyan-500/30">
+                    开始探索
+                </button>
+                <button onclick="openCreateModal()" class="cyber-btn px-8 py-4 rounded-full glass border border-purple-400 text-purple-400 font-bold text-lg hover:bg-purple-400/10 transition-all">
+                    提交创意
+                </button>
+            </div>
+            
+            <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce">
+                <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                </svg>
+            </div>
+        </div>
+        
+        <!-- Stats Overlay -->
+        <div class="absolute bottom-20 right-10 z-20 hidden lg:block glass rounded-2xl p-6 max-w-xs">
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-400 text-sm">在线梦想家</span>
+                    <span class="font-orbitron text-cyan-400 text-xl" id="online-count">2,847</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-400 text-sm">已构建场景</span>
+                    <span class="font-orbitron text-purple-400 text-xl">12,492</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-400 text-sm">未来提案</span>
+                    <span class="font-orbitron text-pink-400 text-xl">3,856</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Four Modules Section -->
+    <section id="modules" class="relative py-32 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-20">
+                <h2 class="font-orbitron text-4xl md:text-5xl font-bold mb-4">
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">
+                        四大未来维度
+                    </span>
+                </h2>
+                <p class="text-gray-400 text-lg">选择你想探索的未来场景，体验沉浸式交互</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- SkyLane -->
+                <div class="module-card glass rounded-3xl p-8 hologram cursor-pointer group" onclick="openModule('skylane')">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-3xl">
+                            ✈️
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-cyan-400/20 text-cyan-400 text-xs font-bold">热门</span>
+                    </div>
+                    <h3 class="font-orbitron text-2xl font-bold mb-3 group-hover:text-cyan-400 transition-colors">SkyLane 低空飞行</h3>
+                    <p class="text-gray-400 mb-6 leading-relaxed">
+                        设计你的个人飞行器，规划三维航线。体验城市上空的自由穿梭，避开"空中交通拥堵"。
+                    </p>
+                    <div class="flex items-center justify-between">
+                        <div class="flex -space-x-2">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=1" class="w-8 h-8 rounded-full border-2 border-black" alt="">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=2" class="w-8 h-8 rounded-full border-2 border-black" alt="">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=3" class="w-8 h-8 rounded-full border-2 border-black" alt="">
+                            <span class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs border-2 border-black">+2k</span>
+                        </div>
+                        <button class="text-cyan-400 flex items-center space-x-1 group-hover:translate-x-2 transition-transform">
+                            <span>进入体验</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- AutoLife -->
+                <div class="module-card glass rounded-3xl p-8 hologram cursor-pointer group" onclick="openModule('autolife')">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-400 to-pink-600 flex items-center justify-center text-3xl">
+                            🚗
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-purple-400/20 text-purple-400 text-xs font-bold">新上线</span>
+                    </div>
+                    <h3 class="font-orbitron text-2xl font-bold mb-3 group-hover:text-purple-400 transition-colors">AutoLife 无人驾驶</h3>
+                    <p class="text-gray-400 mb-6 leading-relaxed">
+                        零事故、零拥堵的未来交通。体验AI司机如何学习你的习惯，让通勤变成享受。
+                    </p>
+                    <div class="flex items-center justify-between">
+                        <div class="flex -space-x-2">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=4" class="w-8 h-8 rounded-full border-2 border-black" alt="">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=5" class="w-8 h-8 rounded-full border-2 border-black" alt="">
+                            <span class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs border-2 border-black">+856</span>
+                        </div>
+                        <button class="text-purple-400 flex items-center space-x-1 group-hover:translate-x-2 transition-transform">
+                            <span>进入体验</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- MediAI -->
+                <div class="module-card glass rounded-3xl p-8 hologram cursor-pointer group" onclick="openModule('mediai')">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-400 to-cyan-600 flex items-center justify-center text-3xl">
+                            🏥
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-green-400/20 text-green-400 text-xs font-bold">健康</span>
+                    </div>
+                    <h3 class="font-orbitron text-2xl font-bold mb-3 group-hover:text-green-400 transition-colors">MediAI 智能医疗</h3>
+                    <p class="text-gray-400 mb-6 leading-relaxed">
+                        疾病预测、纳米治疗、AI医生24小时守护。让健康不再是奢侈品，而是基础权利。
+                    </p>
+                    <div class="flex items-center justify-between">
+                        <div class="flex -space-x-2">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=6" class="w-8 h-8 rounded-full border-2 border-black" alt="">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=7" class="w-8 h-8 rounded-full border-2 border-black" alt="">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=8" class="w-8 h-8 rounded-full border-2 border-black" alt="">
+                            <span class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs border-2 border-black">+1.2k</span>
+                        </div>
+                        <button class="text-green-400 flex items-center space-x-1 group-hover:translate-x-2 transition-transform">
+                            <span>进入体验</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SynthCity -->
+                <div class="module-card glass rounded-3xl p-8 hologram cursor-pointer group" onclick="openModule('synthcity')">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-400 to-red-600 flex items-center justify-center text-3xl">
+                            🏙️
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-orange-400/20 text-orange-400 text-xs font-bold">共创</span>
+                    </div>
+                    <h3 class="font-orbitron text-2xl font-bold mb-3 group-hover:text-orange-400 transition-colors">SynthCity 合成城市</h3>
+                    <p class="text-gray-400 mb-6 leading-relaxed">
+                        用AI搭建你的理想社区。从建筑到生态，从交通到社交，每一块"未来积木"都由你定义。
+                    </p>
+                    <div class="flex items-center justify-between">
+                        <div class="flex -space-x-2">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=9" class="w-8 h-8 rounded-full border-2 border-black" alt="">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=10" class="w-8 h-8 rounded-full border-2 border-black" alt="">
+                            <span class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs border-2 border-black">+3.4k</span>
+                        </div>
+                        <button class="text-orange-400 flex items-center space-x-1 group-hover:translate-x-2 transition-transform">
+                            <span>进入体验</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Demo Section -->
+    <section id="explore" class="relative py-32 px-6 bg-gradient-to-b from-[#050510] to-[#0a0a20]">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                <div>
+                    <h2 class="font-orbitron text-4xl font-bold mb-6">
+                        实时未来模拟器
+                    </h2>
+                    <p class="text-gray-400 text-lg mb-8 leading-relaxed">
+                        调整参数，看看不同技术普及率下的城市形态。拖动滑块，观察低空飞行器密度、AI医疗覆盖率如何改变我们的生活空间。
+                    </p>
+                    
+                    <div class="space-y-6">
+                        <div class="glass rounded-2xl p-6">
+                            <div class="flex justify-between mb-2">
+                                <span class="text-cyan-400 font-bold">低空飞行器密度</span>
+                                <span class="font-orbitron" id="sky-value">45%</span>
+                            </div>
+                            <input type="range" min="0" max="100" value="45" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-400" oninput="updateSimulation('sky', this.value)">
+                        </div>
+                        
+                        <div class="glass rounded-2xl p-6">
+                            <div class="flex justify-between mb-2">
+                                <span class="text-purple-400 font-bold">自动驾驶普及率</span>
+                                <span class="font-orbitron" id="auto-value">78%</span>
+                            </div>
+                            <input type="range" min="0" max="100" value="78" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-400" oninput="updateSimulation('auto', this.value)">
+                        </div>
+                        
+                        <div class="glass rounded-2xl p-6">
+                            <div class="flex justify-between mb-2">
+                                <span class="text-green-400 font-bold">AI医疗覆盖率</span>
+                                <span class="font-orbitron" id="medi-value">92%</span>
+                            </div>
+                            <input type="range" min="0" max="100" value="92" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-400" oninput="updateSimulation('medi', this.value)">
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 p-6 rounded-2xl bg-gradient-to-r from-cyan-900/30 to-purple-900/30 border border-cyan-400/20">
+                        <p class="text-sm text-cyan-300 mb-2">💡 未来洞察</p>
+                        <p class="text-gray-300" id="insight-text">
+                            当低空飞行达到45%密度时，城市将需要建立三维交通网格，建筑物顶部将成为新的"停机坪"，城市规划将彻底重构。
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="relative h-[600px] glass rounded-3xl overflow-hidden" id="simulation-container">
+                    <div class="absolute inset-0 cyber-grid opacity-30"></div>
+                    <canvas id="simulation-canvas" class="absolute inset-0 w-full h-full"></canvas>
+                    
+                    <div class="absolute bottom-6 left-6 right-6 glass rounded-xl p-4">
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-400">模拟时间</span>
+                            <span class="font-orbitron text-cyan-400" id="sim-time">2088.03.15 14:30</span>
+                        </div>
+                        <div class="mt-2 h-1 bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-cyan-400 to-purple-400 w-3/4 animate-pulse"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dream Workshop -->
+    <section id="create" class="relative py-32 px-6">
+        <div class="max-w-5xl mx-auto text-center">
+            <h2 class="font-orbitron text-4xl md:text-5xl font-bold mb-6">
+                梦想工坊
+            </h2>
+            <p class="text-gray-400 text-lg mb-12">
+                描述你心中的未来场景，AI将为你生成可视化概念图并加入社区投票
+            </p>
+            
+            <div class="glass rounded-3xl p-8 md:p-12 max-w-3xl mx-auto">
+                <div class="space-y-6">
+                    <div class="relative">
+                        <input type="text" placeholder="给你的创意起个名字..." class="cyber-input w-full bg-black/30 border border-gray-600 rounded-xl px-6 py-4 text-white placeholder-gray-500 transition-all">
+                    </div>
+                    
+                    <div class="relative">
+                        <textarea placeholder="描述你想象中的未来场景... 例如：'在2088年的早晨，我的AI管家通过脑机接口温柔地唤醒我，窗外的飞行汽车安静地滑过...'" rows="4" class="cyber-input w-full bg-black/30 border border-gray-600 rounded-xl px-6 py-4 text-white placeholder-gray-500 transition-all resize-none"></textarea>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-3 justify-center">
+                        <span class="px-4 py-2 rounded-full glass text-sm text-cyan-400 cursor-pointer hover:bg-cyan-400/20 transition-colors">🏠 智能家居</span>
+                        <span class="px-4 py-2 rounded-full glass text-sm text-purple-400 cursor-pointer hover:bg-purple-400/20 transition-colors">🚀 太空旅行</span>
+                        <span class="px-4 py-2 rounded-full glass text-sm text-green-400 cursor-pointer hover:bg-green-400/20 transition-colors">🧬 生物工程</span>
+                        <span class="px-4 py-2 rounded-full glass text-sm text-orange-400 cursor-pointer hover:bg-orange-400/20 transition-colors">⚡ 清洁能源</span>
+                    </div>
+                    
+                    <button onclick="submitIdea()" class="cyber-btn w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-bold text-lg hover:shadow-lg hover:shadow-cyan-500/30 transition-all">
+                        生成未来场景 ✨
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Recent Ideas -->
+            <div class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="glass rounded-2xl p-6 text-left hover:border-cyan-400/50 transition-all cursor-pointer">
+                    <div class="h-32 bg-gradient-to-br from-cyan-900/50 to-blue-900/50 rounded-xl mb-4 flex items-center justify-center text-4xl">
+                        🌊
+                    </div>
+                    <h4 class="font-bold mb-2">海底城市穹顶</h4>
+                    <p class="text-sm text-gray-400 mb-3">当陆地资源耗尽，我们向海洋深处进发...</p>
+                    <div class="flex items-center justify-between text-xs text-gray-500">
+                        <span>👁️ 2.4k 浏览</span>
+                        <span>❤️ 856 支持</span>
+                    </div>
+                </div>
+                
+                <div class="glass rounded-2xl p-6 text-left hover:border-purple-400/50 transition-all cursor-pointer">
+                    <div class="h-32 bg-gradient-to-br from-purple-900/50 to-pink-900/50 rounded-xl mb-4 flex items-center justify-center text-4xl">
+                        🧠
+                    </div>
+                    <h4 class="font-bold mb-2">意识云端备份</h4>
+                    <p class="text-sm text-gray-400 mb-3">数字永生不再是梦，每天自动备份记忆...</p>
+                    <div class="flex items-center justify-between text-xs text-gray-500">
+                        <span>👁️ 3.1k 浏览</span>
+                        <span>❤️ 1.2k 支持</span>
+                    </div>
+                </div>
+                
+                <div class="glass rounded-2xl p-6 text-left hover:border-green-400/50 transition-all cursor-pointer">
+                    <div class="h-32 bg-gradient-to-br from-green-900/50 to-cyan-900/50 rounded-xl mb-4 flex items-center justify-center text-4xl">
+                        🌱
+                    </div>
+                    <h4 class="font-bold mb-2">基因编辑花园</h4>
+                    <p class="text-sm text-gray-400 mb-3">每家每户都有自己的CRISPR实验室...</p>
+                    <div class="flex items-center justify-between text-xs text-gray-500">
+                        <span>👁️ 1.8k 浏览</span>
+                        <span>❤️ 623 支持</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Community Section -->
+    <section id="community" class="relative py-32 px-6 bg-gradient-to-b from-[#0a0a20] to-[#050510]">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2">
+                    <h2 class="font-orbitron text-3xl font-bold mb-8">社区动态</h2>
+                    <div class="space-y-4" id="community-feed">
+                        <!-- Dynamic content will be inserted here -->
+                    </div>
+                </div>
+                
+                <div>
+                    <h2 class="font-orbitron text-3xl font-bold mb-8">热门标签</h2>
+                    <div class="glass rounded-2xl p-6">
+                        <div class="flex flex-wrap gap-2">
+                            <span class="px-3 py-1 rounded-full bg-cyan-400/20 text-cyan-400 text-sm">#低空经济</span>
+                            <span class="px-3 py-1 rounded-full bg-purple-400/20 text-purple-400 text-sm">#AI医生</span>
+                            <span class="px-3 py-1 rounded-full bg-green-400/20 text-green-400 text-sm">#无人驾驶</span>
+                            <span class="px-3 py-1 rounded-full bg-pink-400/20 text-pink-400 text-sm">#脑机接口</span>
+                            <span class="px-3 py-1 rounded-full bg-yellow-400/20 text-yellow-400 text-sm">#量子计算</span>
+                            <span class="px-3 py-1 rounded-full bg-red-400/20 text-red-400 text-sm">#火星殖民</span>
+                            <span class="px-3 py-1 rounded-full bg-blue-400/20 text-blue-400 text-sm">#核聚变能源</span>
+                            <span class="px-3 py-1 rounded-full bg-indigo-400/20 text-indigo-400 text-sm">#虚拟现实</span>
+                        </div>
+                        
+                        <div class="mt-8 pt-8 border-t border-gray-700">
+                            <h3 class="font-bold mb-4">本周梦想家排行</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-yellow-400 font-orbitron font-bold">01</span>
+                                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=leader1" class="w-8 h-8 rounded-full" alt="">
+                                    <span class="flex-1">FutureWalker</span>
+                                    <span class="text-cyan-400 text-sm">9,847 pts</span>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-gray-400 font-orbitron font-bold">02</span>
+                                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=leader2" class="w-8 h-8 rounded-full" alt="">
+                                    <span class="flex-1">NeoBuilder</span>
+                                    <span class="text-cyan-400 text-sm">8,234 pts</span>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-orange-400 font-orbitron font-bold">03</span>
+                                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=leader3" class="w-8 h-8 rounded-full" alt="">
+                                    <span class="flex-1">SkyDreamer</span>
+                                    <span class="text-cyan-400 text-sm">7,892 pts</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="relative py-12 px-6 border-t border-gray-800">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
+            <div class="flex items-center space-x-2 mb-4 md:mb-0">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center">
+                    <span class="font-orbitron font-bold text-sm">FV</span>
+                </div>
+                <span class="font-orbitron text-xl font-bold">FutureVerse</span>
+            </div>
+            
+            <div class="text-gray-500 text-sm">
+                © 2088 FutureVerse. 由梦想家共同构建的未来。
+            </div>
+            
+            <div class="flex space-x-4 mt-4 md:mt-0">
+                <a href="#" class="w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-cyan-400/20 transition-colors">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+                </a>
+                <a href="#" class="w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-purple-400/20 transition-colors">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Module Modal -->
+    <div id="module-modal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="glass rounded-3xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
+            <button onclick="closeModal()" class="absolute top-4 right-4 w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-red-500/20 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            
+            <div id="modal-content">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Modal -->
+    <div id="create-modal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="glass rounded-3xl p-8 max-w-2xl w-full relative">
+            <button onclick="closeCreateModal()" class="absolute top-4 right-4 w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-red-500/20 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            
+            <h3 class="font-orbitron text-2xl font-bold mb-6">提交你的未来创意</h3>
+            <div class="space-y-4">
+                <input type="text" placeholder="创意标题" class="cyber-input w-full bg-black/30 border border-gray-600 rounded-xl px-4 py-3 text-white">
+                <textarea placeholder="详细描述..." rows="4" class="cyber-input w-full bg-black/30 border border-gray-600 rounded-xl px-4 py-3 text-white resize-none"></textarea>
+                <button onclick="closeCreateModal(); showNotification('创意已提交！正在生成可视化...')" class="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-bold">
+                    确认提交
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="fixed bottom-8 right-8 glass rounded-xl px-6 py-4 transform translate-y-20 opacity-0 transition-all duration-300 z-50 border-l-4 border-cyan-400">
+        <p class="text-white" id="notification-text">Notification</p>
+    </div>
+
+    <script>
+        // Custom Cursor
+        const cursor = document.getElementById('cursor');
+        const follower = document.getElementById('cursor-follower');
+        
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX - 10 + 'px';
+            cursor.style.top = e.clientY - 10 + 'px';
+            
+            setTimeout(() => {
+                follower.style.left = e.clientX - 20 + 'px';
+                follower.style.top = e.clientY - 20 + 'px';
+            }, 100);
+        });
+        
+        document.addEventListener('mousedown', () => {
+            cursor.style.transform = 'scale(0.8)';
+        });
+        
+        document.addEventListener('mouseup', () => {
+            cursor.style.transform = 'scale(1)';
+        });
+
+        // Particle System
+        const particleCanvas = document.getElementById('particle-canvas');
+        const ctx = particleCanvas.getContext('2d');
+        particleCanvas.width = window.innerWidth;
+        particleCanvas.height = window.innerHeight;
+
+        const particles = [];
+        const particleCount = 100;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * particleCanvas.width;
+                this.y = Math.random() * particleCanvas.height;
+                this.size = Math.random() * 2;
+                this.speedX = Math.random() * 0.5 - 0.25;
+                this.speedY = Math.random() * 0.5 - 0.25;
+                this.color = Math.random() > 0.5 ? '#00f0ff' : '#7000ff';
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                if (this.x > particleCanvas.width) this.x = 0;
+                if (this.x < 0) this.x = particleCanvas.width;
+                if (this.y > particleCanvas.height) this.y = 0;
+                if (this.y < 0) this.y = particleCanvas.height;
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = 0.5;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+            
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                
+                // Connect particles
+                for (let j = i; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 100) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = particles[i].color;
+                        ctx.globalAlpha = 0.1 * (1 - distance / 100);
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        // Three.js City
+        const cityCanvas = document.getElementById('city-canvas');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: cityCanvas, alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+
+        // Create futuristic city
+        const cityGroup = new THREE.Group();
+        
+        // Buildings
+        for (let i = 0; i < 50; i++) {
+            const height = Math.random() * 20 + 5;
+            const geometry = new THREE.BoxGeometry(2, height, 2);
+            const material = new THREE.MeshBasicMaterial({ 
+                color: Math.random() > 0.5 ? 0x00f0ff : 0x7000ff,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.3
+            });
+            const building = new THREE.Mesh(geometry, material);
+            building.position.x = (Math.random() - 0.5) * 100;
+            building.position.z = (Math.random() - 0.5) * 100;
+            building.position.y = height / 2;
+            cityGroup.add(building);
+            
+            // Add glowing edges
+            const edges = new THREE.EdgesGeometry(geometry);
+            const lineMaterial = new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.5 });
+            const wireframe = new THREE.LineSegments(edges, lineMaterial);
+            building.add(wireframe);
+        }
+
+        // Flying cars (particles)
+        const carGeometry = new THREE.SphereGeometry(0.3, 8, 8);
+        const carMaterial = new THREE.MeshBasicMaterial({ color: 0xff00ff });
+        const cars = [];
+        
+        for (let i = 0; i < 20; i++) {
+            const car = new THREE.Mesh(carGeometry, carMaterial);
+            car.position.x = (Math.random() - 0.5) * 80;
+            car.position.y = Math.random() * 30 + 10;
+            car.position.z = (Math.random() - 0.5) * 80;
+            car.userData = {
+                speed: Math.random() * 0.2 + 0.1,
+                direction: Math.random() * Math.PI * 2
+            };
+            cityGroup.add(car);
+            cars.push(car);
+        }
+
+        scene.add(cityGroup);
+        camera.position.z = 50;
+        camera.position.y = 20;
+        camera.lookAt(0, 0, 0);
+
+        // Mouse interaction
+        let mouseX = 0;
+        let mouseY = 0;
+        
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+            mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+        });
+
+        function animateCity() {
+            requestAnimationFrame(animateCity);
+            
+            // Rotate city based on mouse
+            cityGroup.rotation.y += 0.001;
+            cityGroup.rotation.x = mouseY * 0.1;
+            cityGroup.rotation.y += mouseX * 0.01;
+            
+            // Animate cars
+            cars.forEach(car => {
+                car.position.x += Math.cos(car.userData.direction) * car.userData.speed;
+                car.position.z += Math.sin(car.userData.direction) * car.userData.speed;
+                
+                if (Math.abs(car.position.x) > 50 || Math.abs(car.position.z) > 50) {
+                    car.position.x = (Math.random() - 0.5) * 80;
+                    car.position.z = (Math.random() - 0.5) * 80;
+                }
+            });
+            
+            renderer.render(scene, camera);
+        }
+        animateCity();
+
+        // Simulation Canvas
+        const simCanvas = document.getElementById('simulation-canvas');
+        const simCtx = simCanvas.getContext('2d');
+        const simContainer = document.getElementById('simulation-container');
+        
+        function resizeSimCanvas() {
+            simCanvas.width = simContainer.offsetWidth;
+            simCanvas.height = simContainer.offsetHeight;
+        }
+        resizeSimCanvas();
+        window.addEventListener('resize', resizeSimCanvas);
+
+        let skyDensity = 45;
+        let autoRate = 78;
+        let mediRate = 92;
+
+        function drawSimulation() {
+            simCtx.fillStyle = 'rgba(5, 5, 16, 0.1)';
+            simCtx.fillRect(0, 0, simCanvas.width, simCanvas.height);
+            
+            const centerX = simCanvas.width / 2;
+            const centerY = simCanvas.height / 2;
+            
+            // Draw city grid based on parameters
+            simCtx.strokeStyle = `rgba(0, 240, 255, ${skyDensity / 200})`;
+            simCtx.lineWidth = 1;
+            
+            // Vertical lines
+            for (let i = 0; i < simCanvas.width; i += 50) {
+                simCtx.beginPath();
+                simCtx.moveTo(i, 0);
+                simCtx.lineTo(i, simCanvas.height);
+                simCtx.stroke();
+            }
+            
+            // Horizontal lines (perspective)
+            for (let i = 0; i < simCanvas.height; i += 30) {
+                simCtx.beginPath();
+                simCtx.moveTo(0, i);
+                simCtx.lineTo(simCanvas.width, i);
+                simCtx.stroke();
+            }
+            
+            // Flying vehicles
+            const vehicleCount = Math.floor(skyDensity / 5);
+            simCtx.fillStyle = '#00f0ff';
+            for (let i = 0; i < vehicleCount; i++) {
+                const x = (Date.now() / 50 + i * 100) % simCanvas.width;
+                const y = 50 + i * 30;
+                simCtx.fillRect(x, y, 10, 4);
+            }
+            
+            // Ground vehicles
+            simCtx.fillStyle = '#a855f7';
+            const groundVehicleCount = Math.floor(autoRate / 10);
+            for (let i = 0; i < groundVehicleCount; i++) {
+                const x = (Date.now() / 30 + i * 80) % simCanvas.width;
+                const y = simCanvas.height - 100 + (i % 3) * 20;
+                simCtx.fillRect(x, y, 15, 8);
+            }
+            
+            // Medical drones
+            simCtx.fillStyle = '#4ade80';
+            const droneCount = Math.floor(mediRate / 15);
+            for (let i = 0; i < droneCount; i++) {
+                const x = centerX + Math.sin(Date.now() / 1000 + i) * 100;
+                const y = centerY + Math.cos(Date.now() / 1000 + i) * 50;
+                simCtx.beginPath();
+                simCtx.arc(x, y, 5, 0, Math.PI * 2);
+                simCtx.fill();
+            }
+            
+            requestAnimationFrame(drawSimulation);
+        }
+        drawSimulation();
+
+        // Update simulation
+        function updateSimulation(type, value) {
+            value = parseInt(value);
+            if (type === 'sky') {
+                skyDensity = value;
+                document.getElementById('sky-value').textContent = value + '%';
+                document.getElementById('insight-text').textContent = 
+                    value > 70 ? '高空域密度将催生"空中高速公路"系统，建筑物间需要建立磁力连接通道。' :
+                    value > 40 ? '当低空飞行达到' + value + '%密度时，城市将需要建立三维交通网格，建筑物顶部将成为新的"停机坪"。' :
+                    '低密度飞行时代，个人飞行器仍是奢侈品，主要服务于紧急医疗和高端商务。';
+            } else if (type === 'auto') {
+                autoRate = value;
+                document.getElementById('auto-value').textContent = value + '%';
+            } else if (type === 'medi') {
+                mediRate = value;
+                document.getElementById('medi-value').textContent = value + '%';
+            }
+        }
+
+        // Typing effect
+        const heroTitle = document.getElementById('hero-title');
+        const texts = ['构建你的未来', '想象无限可能', '共创明日世界'];
+        let textIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+
+        function typeEffect() {
+            const currentText = texts[textIndex];
+            
+            if (isDeleting) {
+                heroTitle.textContent = currentText.substring(0, charIndex - 1);
+                charIndex--;
+            } else {
+                heroTitle.textContent = currentText.substring(0, charIndex + 1);
+                charIndex++;
+            }
+            
+            if (!isDeleting && charIndex === currentText.length) {
+                isDeleting = true;
+                setTimeout(typeEffect, 2000);
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                textIndex = (textIndex + 1) % texts.length;
+                setTimeout(typeEffect, 500);
+            } else {
+                setTimeout(typeEffect, isDeleting ? 50 : 100);
+            }
+        }
+        typeEffect();
+
+        // Community Feed
+        const feedData = [
+            { user: 'CyberArchitect', action: '提交了新的未来场景', target: '「云端花园城市」', time: '2分钟前', avatar: 'seed=11' },
+            { user: 'NeonDreamer', action: '支持了', target: '「意识上传计划」', time: '5分钟前', avatar: 'seed=12' },
+            { user: 'FutureMedic', action: '评论了', target: '「AI医生伦理讨论」', time: '12分钟前', avatar: 'seed=13' },
+            { user: 'SkyPilot', action: '更新了航线设计', target: '「第15区空中走廊」', time: '18分钟前', avatar: 'seed=14' }
+        ];
+
+        function renderFeed() {
+            const feedContainer = document.getElementById('community-feed');
+            feedContainer.innerHTML = feedData.map(item => `
+                <div class="glass rounded-xl p-4 flex items-center space-x-4 hover:bg-white/5 transition-colors cursor-pointer">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?${item.avatar}" class="w-12 h-12 rounded-full" alt="">
+                    <div class="flex-1">
+                        <p class="text-sm">
+                            <span class="font-bold text-cyan-400">${item.user}</span>
+                            <span class="text-gray-400">${item.action}</span>
+                            <span class="text-white font-medium">${item.target}</span>
+                        </p>
+                        <p class="text-xs text-gray-500 mt-1">${item.time}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+        renderFeed();
+
+        // Modal Functions
+        function openModule(module) {
+            const modal = document.getElementById('module-modal');
+            const content = document.getElementById('modal-content');
+            
+            const moduleData = {
+                skylane: {
+                    title: 'SkyLane 低空飞行',
+                    icon: '✈️',
+                    color: 'cyan',
+                    description: '在2088年，低空飞行已经成为主要通勤方式。设计你的eVTOL（电动垂直起降飞行器），规划三维航线，体验空中交通管制的智能调度。',
+                    features: ['个性化飞行器设计', '实时空域管理', '空中充电网络', '紧急避险AI']
+                },
+                autolife: {
+                    title: 'AutoLife 无人驾驶',
+                    icon: '🚗',
+                    color: 'purple',
+                    description: '零事故、零拥堵的未来交通网络。你的AI司机了解你的每一个习惯，从座椅角度到音乐喜好，通勤时间变成你的私人时光。',
+                    features: ['神经网络驾驶', '车路协同系统', '个性化座舱', '能源自动补给']
+                },
+                mediai: {
+                    title: 'MediAI 智能医疗',
+                    icon: '🏥',
+                    color: 'green',
+                    description: '纳米机器人在血管中巡逻，AI医生通过可穿戴设备实时监测你的健康。疾病在症状出现前就被预防，平均寿命突破120岁。',
+                    features: ['预测性医疗', '纳米治疗', '远程手术', '基因优化']
+                },
+                synthcity: {
+                    title: 'SynthCity 合成城市',
+                    icon: '🏙️',
+                    color: 'orange',
+                    description: '模块化的未来社区，建筑可以像乐高一样重组。AI规划师根据居民需求实时调整城市布局，绿色空间与高科技完美融合。',
+                    features: ['模块化建筑', '自修复材料', '能源自给', '社区DAO治理']
+                }
+            };
+            
+            const data = moduleData[module];
+            content.innerHTML = `
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">${data.icon}</div>
+                    <h2 class="font-orbitron text-4xl font-bold text-${data.color}-400 mb-4">${data.title}</h2>
+                    <p class="text-gray-300 text-lg leading-relaxed">${data.description}</p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-8">
+                    ${data.features.map(f => `
+                        <div class="glass rounded-xl p-4 text-center hover:bg-${data.color}-400/10 transition-colors">
+                            <span class="text-${data.color}-400">✦</span> ${f}
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="h-64 bg-black/50 rounded-xl mb-6 flex items-center justify-center border border-gray-700">
+                    <p class="text-gray-500">3D 交互演示加载中...</p>
+                </div>
+                
+                <button onclick="closeModal()" class="w-full py-4 rounded-xl bg-${data.color}-500 hover:bg-${data.color}-600 text-white font-bold transition-colors">
+                    进入完整体验
+                </button>
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('module-modal').classList.remove('active');
+        }
+
+        function openCreateModal() {
+            document.getElementById('create-modal').classList.add('active');
+        }
+
+        function closeCreateModal() {
+            document.getElementById('create-modal').classList.remove('active');
+        }
+
+        function submitIdea() {
+            showNotification('正在生成你的未来场景...');
+            setTimeout(() => {
+                showNotification('✨ 场景已创建！获得 50 积分');
+            }, 2000);
+        }
+
+        function showNotification(text) {
+            const notif = document.getElementById('notification');
+            document.getElementById('notification-text').textContent = text;
+            notif.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                notif.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('bg-black/50');
+            } else {
+                navbar.classList.remove('bg-black/50');
+            }
+        });
+
+        // Window resize
+        window.addEventListener('resize', () => {
+            particleCanvas.width = window.innerWidth;
+            particleCanvas.height = window.innerHeight;
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Online counter animation
+        setInterval(() => {
+            const counter = document.getElementById('online-count');
+            let current = parseInt(counter.textContent.replace(',', ''));
+            current += Math.floor(Math.random() * 10) - 5;
+            counter.textContent = current.toLocaleString();
+        }, 5000);
+    </script>
+</body>
+</html>
